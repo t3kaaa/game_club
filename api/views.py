@@ -4,11 +4,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from .models import Account,Zone,Room,Device,Booking
-from .serializer import AccSerializer,ZoneSerializer, RoomSerializer, DevSerializer,BookSerializer,UserRegisterSerializer,UserLoginSerializer,BookingCancelSerializer,BookingHistorySerializer
-from rest_framework.generics import ListCreateAPIView,CreateAPIView,DestroyAPIView,ListAPIView
+from .serializer import AccSerializer,ZoneSerializer, RoomSerializer, DevSerializer,BookSerializer,UserRegisterSerializer,UserLoginSerializer,BookingCancelSerializer,BookingHistorySerializer,BookRoomSerializer
+from rest_framework.generics import ListCreateAPIView,CreateAPIView,DestroyAPIView,ListAPIView,RetrieveAPIView
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
 from django.contrib.auth import login
+from .pagitation import ZonePagination,RoomPagination,DevicePagination
 
 
 
@@ -65,20 +66,71 @@ class Api_Zone(ListCreateAPIView):
     queryset = Zone.objects.all()
     serializer_class = ZoneSerializer
 
+class Api_ZoneList(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = Zone.objects.all()
+    serializer_class = ZoneSerializer
+    pagination_class = ZonePagination
+
 class Api_Room(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
+
+class Api_RoomList(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = RoomSerializer
+    pagination_class = RoomPagination
+
+    def get_queryset(self):
+        zone_id = self.request.query_params.get("zone_id")
+        qs = Room.objects.all()
+        if zone_id:
+            qs = qs.filter(zone_id=zone_id)
+        return qs
 
 class Api_Device(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
     queryset = Device.objects.all()
     serializer_class = DevSerializer
 
-class Api_Booking(ListCreateAPIView):
+class Api_AboutDevice(RetrieveAPIView):
+    serializer_class = DevSerializer
+    permission_classes = [IsAuthenticated]
+    queryset=Device.objects.all()
+    
+
+class Api_DeviceList(ListAPIView):
+    serializer_class = DevSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = DevicePagination
+    
+    def get_queryset(self):
+        zone_id = self.request.query_params.get("zone_id")
+        qs = Device.objects.all()
+        if zone_id:
+            qs = qs.filter(zone_id=zone_id)
+        return qs
+
+class Api_DeviceBooking(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
-    queryset = Booking.objects.all()
     serializer_class = BookSerializer
+
+    def get_queryset(self):
+        return Booking.objects.filter(
+            device__isnull=False,
+            account__user=self.request.user
+        )
+    
+class Api_RoomBooking(ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BookRoomSerializer
+
+    def get_queryset(self):
+        return Booking.objects.filter(
+            room__isnull=False,
+            account__user=self.request.user
+        )
 
 class Api_BookingCancel(DestroyAPIView):
     queryset = Booking.objects.all()

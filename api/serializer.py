@@ -3,7 +3,7 @@ from .models import Account, Zone,Room,Device,Booking
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
-
+from django.db import transaction
 
 
 class AccSerializer(serializers.ModelSerializer):
@@ -69,14 +69,10 @@ class BookSerializer(serializers.ModelSerializer):
         ).exists()
 
         if overlap:
-            raise serializers.ValidationError(
-                "Bu PC bu vaqt oralig‘ida band"
-            )
+            raise serializers.ValidationError("Bu PC bu vaqt oralig‘ida band")
 
         if now > data['start_time']:
-            raise serializers.ValidationError(
-                "Siz otmishdi qolib ketdizmi soat xato"
-            )
+            raise serializers.ValidationError("Siz otmishdi qolib ketdizmi soat xato")
 
 
         return data
@@ -156,3 +152,52 @@ class UserLoginSerializer(serializers.Serializer):
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }
+    
+
+class BookRoomSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='account.user.username', read_only=True)
+
+    class Meta:
+        model = Booking
+        fields = ['room', 'zone','start_time', 'end_time','status', 'accumulated_cost','played_minutes', 'username']
+        read_only_fields = ['status', 'accumulated_cost','played_minutes', 'username']
+
+    def validate(self, data):
+        now = timezone.now()
+
+        if data['start_time'] >= data['end_time']:
+            raise serializers.ValidationError("End time start time dan katta bo‘lishi kerak")
+
+        overlap = Booking.objects.filter(
+            room=data['room'],
+            status__in=['pending', 'active'],
+            start_time__lt=data['end_time'],
+            end_time__gt=data['start_time'],
+        ).exists()
+
+        if overlap:
+            raise serializers.ValidationError("Bu room bu vaqt oralig‘ida band")
+
+        if now > data['start_time']:
+            raise serializers.ValidationError("O‘tmish vaqtga booking qilib bo‘lmaydi")
+
+        return data
+
+    @transaction.atomic
+    def create(self, validated_data):
+        request = self.context.get('request')
+        account = request.user.account
+
+        room = validated_data['room']
+
+
+        booking = Booking.objects.create(account=account,status='pending',**validated_data)
+
+        
+        room.is_booked = True
+        room.save(update_fields=['is_booked'])
+
+        
+        Device.objects.filter(room_id=room,is_booked=False).update(is_booked=True)
+
+        return booking

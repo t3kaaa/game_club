@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 class Zone(models.Model):
     name = models.CharField(_("Zone name"), max_length=100)
     total_price = models.IntegerField(_("Total price"), default=0)
-
+    image = models.ImageField(_("Image"), upload_to="zone/", blank=True, null=True)
     def __str__(self):
         return self.name
 
@@ -15,9 +15,10 @@ class Room(models.Model):
     name = models.CharField(_("Room name"), max_length=70)
     description = models.CharField(_("Description"), max_length=255)
     zone_id = models.ForeignKey(Zone,on_delete=models.CASCADE,verbose_name=_("Zone"))
-
+    is_booked = models.BooleanField(_("Is booked"), default=False)
+    image = models.ImageField(_("Image"), upload_to="room/", blank=True, null=True)
     def __str__(self):
-        return self.name
+        return f"{self.name}_{self.zone_id.name} "
 
 
 class Account(models.Model):
@@ -37,10 +38,8 @@ class Device(models.Model):
     devices = models.CharField(_("Devices"),max_length=255,blank=True,null=True)
     screen = models.CharField(_("Screen"),max_length=255,blank=True,null=True)
     image = models.ImageField(_("Image"), upload_to="devices/", blank=True, null=True)
-
     zone_id = models.ForeignKey(Zone,on_delete=models.CASCADE,verbose_name=_("Zone"))
     room_id = models.ForeignKey(Room,on_delete=models.SET_NULL,null=True,blank=True,verbose_name=_("Room"))
-
     is_booked = models.BooleanField(_("Is booked"), default=False)
 
     def __str__(self):
@@ -57,7 +56,8 @@ class Booking(models.Model):
         ("pending", _("Pending")),
     )
 
-    device = models.ForeignKey(Device,on_delete=models.CASCADE,verbose_name=_("Device"))
+    device = models.ForeignKey(Device,on_delete=models.CASCADE,verbose_name=_("Device"),blank=True,null=True)
+    room = models.ForeignKey(Room,on_delete=models.CASCADE,verbose_name=_("Room"),blank=True,null=True)
     zone = models.ForeignKey(Zone,on_delete=models.CASCADE,verbose_name=_("Zone"))
     account = models.ForeignKey(Account,on_delete=models.CASCADE,verbose_name=_("Account"))
 

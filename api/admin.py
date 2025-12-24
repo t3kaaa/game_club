@@ -43,11 +43,36 @@ class BookingAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if obj.status == 'active':
-            obj.device.is_booked = True
-            obj.device.save()
-        elif obj.status in ['missed', 'finished']:
-            obj.device.is_booked = False
-            obj.device.save()
+
+            
+            if obj.device:
+                obj.device.is_booked = True
+                obj.device.save()
+
+            
+            if obj.room:
+                obj.room.is_booked = True
+                obj.room.save()
+
+                Device.objects.filter(
+                    room_id=obj.room
+                ).update(is_booked=True)
+
+     
+        elif obj.status in ['finished', 'missed', 'cancelled']:
+
+            if obj.device:
+                obj.device.is_booked = False
+                obj.device.save()
+
+            if obj.room:
+                obj.room.is_booked = False
+                obj.room.save()
+
+                Device.objects.filter(
+                    room_id=obj.room
+                ).update(is_booked=False)
+
         super().save_model(request, obj, form, change)
 
     def has_change_permission(self, request, obj=None):
