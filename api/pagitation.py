@@ -8,3 +8,6 @@ class RoomPagination(PageNumberPagination):
 
 class DevicePagination(PageNumberPagination):
     page_size = 1
+
+class HistoryPagination(PageNumberPagination):
+    page_size = 5

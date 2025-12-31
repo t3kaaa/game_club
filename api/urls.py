@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path,include
-from .views import Api_Account, Api_Zone, Api_Device, Api_Room, Api_DeviceBooking,All_Api,Api_DeviceList, Api_RoomList,Api_ZoneList,Api_RoomBooking,Api_RegisterUser,Api_login,Api_BookingCancel,Api_MyBookingHistory,Api_AboutDevice
+from .views import Api_Account, Api_Zone, Api_Device, Api_Room, Api_DeviceBooking,All_Api,Api_DeviceList, Api_RoomList,Api_ZoneList,Api_RoomBooking,Api_RegisterUser,Api_login,Api_BookingCancel,Api_MyBookingHistory,Api_AboutDevice,Api_AboutRoom
 
 urlpatterns = [
 	path('all/', All_Api.as_view(),name='all'),
@@ -10,6 +10,7 @@ urlpatterns = [
 	path('room/', Api_RoomList.as_view(), name="room"),
 	path('device/',Api_DeviceList.as_view(),name='device'),
 	path('about_device/<int:pk>/',Api_AboutDevice.as_view(),name='about_device'),
+	path('about_room/<int:pk>/',Api_AboutRoom.as_view(),name='about_room'),
 	
     path('admin/zone/', Api_Zone.as_view(), name="zone"),
 	path('admin/room/', Api_Room.as_view(), name="room"),

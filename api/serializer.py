@@ -49,7 +49,7 @@ class BookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ['device', 'zone', 'start_time', 'end_time', 'status', 'accumulated_cost', 'played_minutes', 'username']
+        fields = ['id','device', 'zone', 'start_time', 'end_time', 'status', 'accumulated_cost', 'played_minutes', 'username']
         read_only_fields = ['status', 'accumulated_cost', 'played_minutes', 'username']
 
     def validate(self, data):
@@ -57,9 +57,11 @@ class BookSerializer(serializers.ModelSerializer):
         
         
         if data['start_time'] >= data['end_time']:
-            raise serializers.ValidationError(
-                "End time start time dan katta bo‘lishi kerak"
-            )
+            raise serializers.ValidationError({
+                "non_field_errors": [
+                    "Tugash vaqti boshlanish vaqtidan katta bo‘lishi kerak"
+                ]
+            })
 
         overlap = Booking.objects.filter(
             device=data['device'],
@@ -69,10 +71,18 @@ class BookSerializer(serializers.ModelSerializer):
         ).exists()
 
         if overlap:
-            raise serializers.ValidationError("Bu PC bu vaqt oralig‘ida band")
+            raise serializers.ValidationError({
+                "non_field_errors": [
+                    "Bu PC bu vaqt oralig‘ida band"
+                ]
+            })
 
         if now > data['start_time']:
-            raise serializers.ValidationError("Siz otmishdi qolib ketdizmi soat xato")
+            raise serializers.ValidationError({
+                "non_field_errors": [
+                    "Boshlanish vaqti hozirgi vaqtdan katta bo‘lishi kerak"
+                ]
+            })
 
 
         return data
@@ -159,7 +169,7 @@ class BookRoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ['room', 'zone','start_time', 'end_time','status', 'accumulated_cost','played_minutes', 'username']
+        fields = ['id','room', 'zone','start_time', 'end_time','status', 'accumulated_cost','played_minutes', 'username']
         read_only_fields = ['status', 'accumulated_cost','played_minutes', 'username']
 
     def validate(self, data):

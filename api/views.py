@@ -9,7 +9,7 @@ from rest_framework.generics import ListCreateAPIView,CreateAPIView,DestroyAPIVi
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
 from django.contrib.auth import login
-from .pagitation import ZonePagination,RoomPagination,DevicePagination
+from .pagitation import ZonePagination,RoomPagination,DevicePagination,HistoryPagination
 
 
 
@@ -99,6 +99,11 @@ class Api_AboutDevice(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     queryset=Device.objects.all()
     
+class Api_AboutRoom(RetrieveAPIView):
+    serializer_class = RoomSerializer
+    permission_classes = [IsAuthenticated]
+    queryset=Room.objects.all()
+    
 
 class Api_DeviceList(ListAPIView):
     serializer_class = DevSerializer
@@ -143,7 +148,7 @@ class Api_BookingCancel(DestroyAPIView):
 class Api_MyBookingHistory(ListAPIView):
     serializer_class = BookingHistorySerializer
     permission_classes = [IsAuthenticated]
-
+    pagination_class=HistoryPagination
     def get_queryset(self):
         return Booking.objects.filter(account__user=self.request.user).order_by('-start_time')
     

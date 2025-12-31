@@ -12,7 +12,7 @@ admin.site.register(Device)
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('__str__','id', 'get_account_username', 'device', 'zone', 'start_time', 'end_time', 'colored_status','status')
+    list_display = ('__str__','id', 'get_account_username', 'device','room', 'zone', 'start_time', 'end_time', 'colored_status','status')
     list_filter = ('status', 'zone')
     search_fields = ('account__user__username',)
     list_editable = ('status',)
